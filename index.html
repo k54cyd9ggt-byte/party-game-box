@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PARTY GAME BOX</title>
+<style>
+:root{--bg:#0d1020;--card:#171b31;--line:#303858;--text:#f6f7ff;--muted:#aeb7d8;--accent:#7c8cff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(160deg,#0b0e1b,#17132b);color:var(--text);min-height:100vh}
+.wrap{max-width:820px;margin:auto;padding:18px}.top{text-align:center;padding:14px 0 22px}.top h1{margin:4px;font-size:34px}.sub{color:var(--muted)}
+.card{background:rgba(23,27,49,.95);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.game{min-height:160px;text-align:left}.game b{font-size:22px}.emoji{font-size:44px}
+button,select,input{font:inherit}button{border:0;border-radius:14px;padding:13px 16px;font-weight:800;cursor:pointer;background:var(--accent);color:white}
+.secondary{background:#252b48;border:1px solid var(--line)}.wide{width:100%}.hidden{display:none!important}
+label{display:block;font-weight:800;margin:10px 0 5px}select,input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#101428;color:white}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.pill{padding:8px 10px;background:#11162a;border:1px solid var(--line);border-radius:12px;font-weight:700}
+.board{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}.cell{aspect-ratio:1;border:1px solid var(--line);border-radius:7px;background:#101428;display:flex;align-items:center;justify-content:center;font-weight:900;position:relative}.used{background:#27345b}.bomb{position:absolute;font-size:20px}.target{box-shadow:inset 0 0 0 2px #f2c94c}.now{outline:2px solid #8fa0ff}
+canvas{width:100%;height:auto;background:white;border-radius:14px;touch-action:none;display:block}.tools{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.color{width:40px;height:40px;padding:0;border:3px solid white}.score{display:flex;gap:6px;flex-wrap:wrap}.score span{background:#101428;border:1px solid var(--line);padding:6px 9px;border-radius:10px}
+.answer{font-size:28px;font-weight:900;text-align:center;padding:8px}.timer{font-size:25px;font-weight:900}.danger{color:#ff6b6b}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.top h1{font-size:29px}.wrap{padding:12px}}
+</style></head><body><div class="wrap">
+<div class="top"><div>🎮 PARTY GAME BOX</div><h1>みんなで遊ぼう！</h1><div class="sub">遊びたいゲームを選択</div></div>
+
+<section id="home">
+<div class="grid">
+<div class="card game"><div class="emoji">💣</div><b>ドボンしりとり</b><p class="sub">爆弾の直前に言葉を止めろ！2〜12人。</p><button onclick="openDobon()">遊ぶ</button></div>
+<div class="card game"><div class="emoji">🎨</div><b>お絵かき当て</b><p class="sub">お題を絵だけで伝えて、みんなで当てよう！</p><button onclick="openDraw()">遊ぶ</button></div>
+</div></section>
+
+<section id="dobonSetup" class="hidden card"><button class="secondary" onclick="home()">← ゲーム選択</button><h2>💣 ドボンしりとり</h2>
+<label>プレイヤー人数</label><select id="dp"></select>
+<p class="sub">爆弾数・位置・最初の文字は人数に合わせてランダム。持ち時間30秒。</p>
+<button class="wide" onclick="startDobon()">ゲーム開始</button></section>
+
+<section id="dobon" class="hidden">
+<div class="bar"><span class="pill" id="dplayer"></span><span class="pill">⏱ <b id="dt">30</b>秒</span><span class="pill">💣 <b id="dbc"></b>個</span></div>
+<div class="board" id="db"></div>
+<div class="card"><h3>「<span id="dn"></span>」から始まる言葉</h3><div class="sub" id="dm"></div><input id="dw" placeholder="言葉を入力"><button class="wide" style="margin-top:8px" onclick="submitDobon()">決定</button><button class="secondary wide" style="margin-top:8px" onclick="home()">ゲーム選択へ</button></div>
+</section>
+
+<section id="drawSetup" class="hidden card"><button class="secondary" onclick="home()">← ゲーム選択</button><h2>🎨 お絵かき当て</h2>
+<label>プレイヤー人数</label><select id="op"></select>
+<label>ラウンド数</label><select id="rounds"><option>3</option><option selected>5</option><option>8</option><option>10</option></select>
+<p class="sub">描く人だけがお題を確認してから開始してください。1ラウンド30秒です。</p><button class="wide" onclick="startDraw()">ゲーム開始</button></section>
+
+<section id="draw" class="hidden">
+<div class="bar"><span class="pill" id="artist"></span><span class="pill">ラウンド <b id="roundNo"></b>/<b id="roundMax"></b></span><span class="pill timer">⏱ <b id="ot">30</b></span></div>
+<div class="score" id="scores"></div>
+<div class="card" id="secret"><div class="sub">描く人だけ見てください</div><div class="answer" id="topic">？？？</div><button class="wide" onclick="beginRound()">お題を覚えた！描き始める</button></div>
+<div id="paintArea" class="hidden"><canvas id="canvas" width="760" height="500"></canvas>
+<div class="tools"><button class="color" style="background:#111" onclick="setColor('#111')"></button><button class="color" style="background:#e63946" onclick="setColor('#e63946')"></button><button class="color" style="background:#2878ff" onclick="setColor('#2878ff')"></button><button class="color" style="background:#2a9d55" onclick="setColor('#2a9d55')"></button><button class="secondary" onclick="eraser()">消しゴム</button><button class="secondary" onclick="clearCanvas()">全消し</button></div>
+<div class="card"><div class="sub">答えが分かった人</div><select id="winner"></select><button class="wide" style="margin-top:8px" onclick="correct()">⭕ 正解！</button><button class="secondary wide" style="margin-top:8px" onclick="nextRound(false)">時間切れ / 正解なし</button></div></div>
+<button class="secondary wide" onclick="home()">ゲーム選択へ</button></section>
+
+<section id="final" class="hidden card"><div class="emoji" style="text-align:center">🏆</div><h2 style="text-align:center">最終結果</h2><div id="ranking"></div><button class="wide" onclick="home()">ゲーム選択へ</button></section>
+</div>
+<script>
+const $=id=>document.getElementById(id); for(let i=2;i<=12;i++){dp.add(new Option(i+'人',i));op.add(new Option(i+'人',i))}
+function hideAll(){['home','dobonSetup','dobon','drawSetup','draw','final'].forEach(x=>$(x).classList.add('hidden'))}
+function home(){clearInterval(dTimer);clearInterval(oTimer);hideAll();$('home').classList.remove('hidden')}
+function openDobon(){hideAll();$('dobonSetup').classList.remove('hidden')} function openDraw(){hideAll();$('drawSetup').classList.remove('hidden')}
+
+// DOBON
+let dPlayers=2,dCur=0,dPos=0,dBombs=new Set(),dCells=[],dNext='',dUsed=new Set(),dTimer,dSec=30;
+const kana='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ'.split('');
+function br(p){return p<=3?[4,6]:p<=5?[5,8]:p<=8?[7,10]:p<=10?[8,12]:[10,14]}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function resetDT(){clearInterval(dTimer);dSec=30;$('dt').textContent=30;dTimer=setInterval(()=>{dSec--;$('dt').textContent=dSec;if(dSec<=0){clearInterval(dTimer);alert('時間切れ！ プレイヤー'+(dCur+1)+' ドボン！');home()}},1000)}
+function startDobon(){dPlayers=+dp.value;dCur=0;dPos=0;dUsed.clear();dBombs.clear();dNext=kana[rand(0,kana.length-1)];let rg=br(dPlayers),n=rand(rg[0],rg[1]);while(dBombs.size<n)dBombs.add(rand(4,38));$('db').innerHTML='';dCells=[];for(let i=0;i<40;i++){let e=document.createElement('div');e.className='cell';e.dataset.l='';db.appendChild(e);dCells.push(e)}$('dbc').textContent=n;hideAll();$('dobon').classList.remove('hidden');renderD();resetDT()}
+function renderD(){$('dplayer').textContent='👤 プレイヤー'+(dCur+1);$('dn').textContent=dNext;dCells.forEach((e,i)=>{e.className='cell'+(i<dPos?' used':'')+(i===dPos?' now':'')+(dBombs.has(i+1)?' target':'');e.innerHTML=e.dataset.l||'';if(dBombs.has(i)){let s=document.createElement('span');s.className='bomb';s.textContent='💣';e.appendChild(s)}})}
+function normal(s){return s.normalize('NFKC').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).replace(/[^ぁ-ゖー]/g,'')}
+function submitDobon(){let w=normal(dw.value);if(w.length<2)return dm.textContent='2文字以上で入力してください';if(w[0]!==dNext)return dm.textContent='「'+dNext+'」から始めてください';if(w.endsWith('ん'))return dm.textContent='「ん」で終われません';if(dUsed.has(w))return dm.textContent='使用済みです';let end=dPos+w.length-1;if(end>=40||!dBombs.has(end+1))return dm.textContent='💣の1マス手前に止まる長さの言葉が必要です';dUsed.add(w);for(let i=0;i<w.length;i++)dCells[dPos+i].dataset.l=w[i];dPos+=w.length;let l=w[w.length-1];if(l==='ー')l=w[w.length-2];dNext=({'ゃ':'や','ゅ':'ゆ','ょ':'よ','っ':'つ'})[l]||l;dw.value='';dCur=(dCur+1)%dPlayers;dm.textContent='⭕ 成功！';renderD();resetDT()}
+
+// DRAW
+let oPlayers=2,oRound=1,oMax=5,oArtist=0,oScores=[],oTimer,oSec=30,painting=false,color='#111',ctx;
+const topics=['ねこ','いぬ','ぞう','きりん','ライオン','うさぎ','ペンギン','さかな','りんご','バナナ','すいか','ケーキ','ラーメン','すし','くるま','バイク','でんしゃ','ひこうき','ロケット','スマホ','テレビ','かさ','めがね','とけい','サッカーボール','富士山','太陽','月','星','雪だるま','おばけ','恐竜','ロボット','忍者','侍','海','花','木','家','学校'];
+let currentTopic='';
+function startDraw(){oPlayers=+op.value;oMax=+rounds.value;oRound=1;oArtist=0;oScores=Array(oPlayers).fill(0);hideAll();$('draw').classList.remove('hidden');ctx=canvas.getContext('2d');prepareRound()}
+function prepareRound(){clearInterval(oTimer);$('paintArea').classList.add('hidden');$('secret').classList.remove('hidden');currentTopic=topics[rand(0,topics.length-1)];$('topic').textContent=currentTopic;$('artist').textContent='🎨 描く人：P'+(oArtist+1);$('roundNo').textContent=oRound;$('roundMax').textContent=oMax;renderScores();clearCanvas();winner.innerHTML='';for(let i=0;i<oPlayers;i++)if(i!==oArtist)winner.add(new Option('プレイヤー'+(i+1),i));$('ot').textContent=30}
+function beginRound(){$('secret').classList.add('hidden');$('paintArea').classList.remove('hidden');oSec=30;$('ot').textContent=oSec;oTimer=setInterval(()=>{oSec--;$('ot').textContent=oSec;if(oSec<=0){clearInterval(oTimer);nextRound(false)}},1000)}
+function renderScores(){scores.innerHTML='';oScores.forEach((s,i)=>{let x=document.createElement('span');x.textContent='P'+(i+1)+' ⭐'+s;scores.appendChild(x)})}
+function correct(){let w=+winner.value;oScores[w]+=2;oScores[oArtist]+=1;nextRound(true)}
+function nextRound(ok){clearInterval(oTimer);if(oRound>=oMax){showFinal();return}oRound++;oArtist=(oArtist+1)%oPlayers;prepareRound()}
+function showFinal(){hideAll();$('final').classList.remove('hidden');let arr=oScores.map((s,i)=>({p:i+1,s})).sort((a,b)=>b.s-a.s);ranking.innerHTML=arr.map((x,i)=>'<div class="card"><b>'+(i+1)+'位　プレイヤー'+x.p+'</b>　⭐ '+x.s+'点</div>').join('')}
+function setColor(c){color=c}function eraser(){color='#fff'}function clearCanvas(){if(!ctx)ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height)}
+function point(e){let r=canvas.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*canvas.width/r.width,y:(t.clientY-r.top)*canvas.height/r.height}}
+function down(e){painting=true;let p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault()}function move(e){if(!painting)return;let p=point(e);ctx.lineWidth=7;ctx.lineCap='round';ctx.strokeStyle=color;ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault()}function up(){painting=false}
+canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+</script></body></html>
