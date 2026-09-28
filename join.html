@@ -1,0 +1,23 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>参加 | PARTY GAME BOX</title><style>
+:root{--bg:#080b16;--card:#14192a;--line:#2c3554;--text:#f7f8ff;--muted:#aab3d1;--accent:#6d7cff;--good:#35d07f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;background:radial-gradient(circle at top,#202957 0,#0b0e1b 42%,#070912 100%);color:var(--text)}
+main{max-width:680px;margin:auto;padding:24px 16px}.logo{text-align:center;font-size:38px;margin:24px 0 8px}.sub{text-align:center;color:var(--muted);margin-bottom:26px}
+.card{background:rgba(20,25,42,.96);border:1px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 16px 50px #0005}
+button,a.btn{display:block;width:100%;border:0;border-radius:15px;padding:15px;margin:10px 0;font:inherit;font-weight:850;text-align:center;text-decoration:none;background:var(--accent);color:white;cursor:pointer}
+button.secondary,a.secondary{background:#222a43;border:1px solid var(--line)}button.good{background:var(--good);color:#06140c}
+input,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:13px;background:#0c1120;color:white;font:inherit;margin:6px 0 12px}
+label{font-weight:800}.code{font-size:44px;font-weight:950;letter-spacing:8px;text-align:center;margin:10px 0}.muted{color:var(--muted)}.players{display:grid;gap:8px}.player{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#0d1221}.hidden{display:none!important}.status{text-align:center;padding:10px;border-radius:12px;background:#0d1221}.err{color:#ff9b9b}.gameTitle{font-size:30px;text-align:center}
+</style></head><body><main>
+<div class="logo">🎮 パーティに参加</div><div id="joinBox" class="card"><label>ルームコード</label><input id="code" inputmode="numeric" maxlength="6" placeholder="6桁"><label>名前</label><input id="name" maxlength="12" placeholder="あなたの名前"><button id="join">参加する</button><a class="btn secondary" href="./index.html">戻る</a><p id="error" class="err"></p></div>
+<div id="wait" class="card hidden"><h2>参加しました！</h2><div class="muted">ルームコード</div><div id="showCode" class="code"></div><p id="gameName" class="status"></p><h3>参加者</h3><div id="players" class="players"></div><p class="status">👑 ホストがゲームを開始するまで待ってください</p></div></main>
+<script>
+const DB='https://party-game-box-d129e-default-rtdb.asia-southeast1.firebasedatabase.app';let roomCode="",playerId="",poll=null;const $=id=>document.getElementById(id);
+async function api(path,method="GET",body){const r=await fetch(DB+"/"+path+".json",{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error("Firebase "+r.status);return r.json();}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+async function join(){$("error").textContent="";roomCode=$("code").value.trim();const n=$("name").value.trim();if(!/^\d{6}$/.test(roomCode)){$("error").textContent="6桁のルームコードを入力してください";return;}if(!n){$("error").textContent="名前を入力してください";return;}
+try{const r=await api("rooms/"+roomCode);if(!r){$("error").textContent="その部屋は見つかりません";return;}if(r.status==="started"){$("error").textContent="この部屋はすでにゲーム中です";return;}if(Object.keys(r.players||{}).length>=12){$("error").textContent="この部屋は満員です";return;}
+playerId="p_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);await api("rooms/"+roomCode+"/players/"+playerId,"PUT",{name:n,host:false,joinedAt:Date.now()});sessionStorage.setItem("pgb_player",playerId);$("joinBox").classList.add("hidden");$("wait").classList.remove("hidden");$("showCode").textContent=roomCode;refresh();poll=setInterval(refresh,1200);
+}catch(e){$("error").textContent="接続エラー: "+e.message;}}
+async function refresh(){const r=await api("rooms/"+roomCode);if(!r)return;const ps=Object.values(r.players||{});$("players").innerHTML=ps.map(p=>'<div class="player">'+(p.host?'👑 ':'🎮 ')+escapeHtml(p.name)+'</div>').join("");$("gameName").textContent=r.game==="draw"?"🎨 お絵かき当て":"💣 ドボンしりとり";if(r.status==="started")location.href="./play.html?room="+encodeURIComponent(roomCode)+"&role=player";}
+$("join").addEventListener("click",join);const q=new URLSearchParams(location.search).get("room");if(q)$("code").value=q;
+</script></body></html>

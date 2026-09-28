@@ -1,0 +1,15 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ゲーム | PARTY GAME BOX</title><style>
+:root{--bg:#080b16;--card:#14192a;--line:#2c3554;--text:#f7f8ff;--muted:#aab3d1;--accent:#6d7cff;--good:#35d07f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;background:radial-gradient(circle at top,#202957 0,#0b0e1b 42%,#070912 100%);color:var(--text)}
+main{max-width:680px;margin:auto;padding:24px 16px}.logo{text-align:center;font-size:38px;margin:24px 0 8px}.sub{text-align:center;color:var(--muted);margin-bottom:26px}
+.card{background:rgba(20,25,42,.96);border:1px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 16px 50px #0005}
+button,a.btn{display:block;width:100%;border:0;border-radius:15px;padding:15px;margin:10px 0;font:inherit;font-weight:850;text-align:center;text-decoration:none;background:var(--accent);color:white;cursor:pointer}
+button.secondary,a.secondary{background:#222a43;border:1px solid var(--line)}button.good{background:var(--good);color:#06140c}
+input,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:13px;background:#0c1120;color:white;font:inherit;margin:6px 0 12px}
+label{font-weight:800}.code{font-size:44px;font-weight:950;letter-spacing:8px;text-align:center;margin:10px 0}.muted{color:var(--muted)}.players{display:grid;gap:8px}.player{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#0d1221}.hidden{display:none!important}.status{text-align:center;padding:10px;border-radius:12px;background:#0d1221}.err{color:#ff9b9b}.gameTitle{font-size:30px;text-align:center}
+</style></head><body><main>
+<div class="logo">🎮 GAME PLAY</div><div class="card"><div id="title" class="gameTitle">読み込み中…</div><p id="info" class="status">部屋情報を取得しています</p><div id="dobon" class="hidden"><h2>💣 ドボンしりとり</h2><p>ゲーム開始を確認できました。次の更新でリアルタイムのターン・盤面同期を追加できます。</p></div><div id="draw" class="hidden"><h2>🎨 お絵かき当て</h2><p>ゲーム開始を確認できました。次の更新でリアルタイムのお題・キャンバス同期を追加できます。</p></div><a class="btn secondary" href="./index.html">トップへ</a></div></main>
+<script>
+const DB='https://party-game-box-d129e-default-rtdb.asia-southeast1.firebasedatabase.app';const q=new URLSearchParams(location.search),room=q.get("room");const $=id=>document.getElementById(id);
+(async()=>{try{const r=await fetch(DB+"/rooms/"+encodeURIComponent(room)+".json");const d=await r.json();if(!d)throw new Error();$("title").textContent=d.game==="draw"?"🎨 お絵かき当て":"💣 ドボンしりとり";$("info").textContent="ルーム "+room+" / "+Object.keys(d.players||{}).length+"人でゲーム開始";$(d.game==="draw"?"draw":"dobon").classList.remove("hidden");}catch{$("title").textContent="部屋が見つかりません";$("info").textContent="トップに戻って参加し直してください";}})();
+</script></body></html>
