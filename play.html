@@ -1,82 +1,54 @@
-<!doctype html>
-<html lang="ja"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ドボンしりとり | PARTY GAME BOX</title>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PARTY GAME BOX</title>
 <style>
-:root{--bg:#070912;--card:#14192a;--line:#303a5c;--text:#f7f8ff;--muted:#aab3d1;--accent:#6d7cff;--good:#35d07f;--bad:#ff5d73}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;background:radial-gradient(circle at top,#202957 0,#0b0e1b 42%,#070912 100%);color:var(--text)}
-main{max-width:760px;margin:auto;padding:18px 14px 50px}.logo{text-align:center;font-size:30px;font-weight:900;margin:12px 0}.card{background:rgba(20,25,42,.97);border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 16px 50px #0005}
-.status{text-align:center;padding:10px;border-radius:12px;background:#0d1221}.muted{color:var(--muted)}.big{text-align:center;font-size:38px;font-weight:950}.timer{font-size:48px}.turn{font-size:22px;font-weight:900;text-align:center}
-input{width:100%;border:1px solid var(--line);border-radius:14px;padding:15px;background:#0c1120;color:#fff;font:inherit;font-size:20px}
-button,a.btn{display:block;width:100%;border:0;border-radius:14px;padding:15px;margin-top:10px;font:inherit;font-weight:900;text-align:center;text-decoration:none;background:var(--accent);color:#fff}
-button:disabled{opacity:.4}.good{background:var(--good);color:#06140c}.bad{background:var(--bad)}.hidden{display:none!important}
-.board{display:flex;gap:7px;overflow-x:auto;padding:8px 2px 13px;scrollbar-width:none}.cell{flex:0 0 52px;height:60px;border:1px solid #3a456c;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;background:#0d1221}.cell.bomb{background:#331923;border-color:#8b3b4c}.cell.pos{outline:3px solid #6d7cff}.cell.goal{box-shadow:inset 0 0 0 2px #35d07f}
-.players{display:grid;gap:7px}.player{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0d1221}.player.current{border-color:#6d7cff;background:#171e3b}
-.history{max-height:180px;overflow:auto}.history div{padding:7px 0;border-bottom:1px solid #242c48}.msg{text-align:center;font-weight:800;min-height:24px}.ok{color:#66e6a1}.err{color:#ff9b9b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#202957,#070912 55%);color:#fff;font-family:system-ui,-apple-system,sans-serif}main{max-width:760px;margin:auto;padding:14px 14px 50px}.top{display:inline-block;color:#fff;text-decoration:none;font-weight:900;background:#151a2d;border:1px solid #30395d;border-radius:13px;padding:11px 14px}.card{background:#151a2d;border:1px solid #30395d;border-radius:20px;padding:15px;margin:12px 0}.title{text-align:center;font-size:30px;font-weight:950}.center{text-align:center}.muted{color:#abb5d5}.big{font-size:38px;font-weight:950}.timer{font-size:44px;font-weight:950}button,input{font:inherit}button{border:0;border-radius:13px;padding:13px;font-weight:900;background:#6d7cff;color:#fff;min-height:46px}button:disabled{opacity:.4}input{width:100%;font-size:18px;padding:14px;border-radius:13px;border:1px solid #354064;background:#0d1221;color:#fff}.hidden{display:none!important}.players{display:grid;gap:7px}.player{padding:10px;border:1px solid #354064;border-radius:11px}.current{border-color:#6d7cff}.board{display:flex;gap:6px;overflow-x:auto;padding:9px 2px}.cell{flex:0 0 48px;height:55px;border:1px solid #354064;border-radius:10px;display:grid;place-items:center}.bomb{background:#391924}.pos{outline:3px solid #6d7cff}.goal{box-shadow:inset 0 0 0 2px #35d07f}.row{display:flex;gap:8px;flex-wrap:wrap}.row button{flex:1}.msg{text-align:center;font-weight:800;min-height:24px}.ok{color:#68e5a2}.err{color:#ff9b9b}
+canvas{width:100%;height:auto;aspect-ratio:4/3;background:white;border-radius:14px;touch-action:none;display:block}.palette button{min-width:44px;flex:0 0 44px;padding:0;border:2px solid #fff}.history{max-height:160px;overflow:auto}.history div{padding:6px;border-bottom:1px solid #29314f}
 </style></head><body><main>
-<div class="logo">💣 ドボンしりとり</div>
-<div id="loading" class="card status">ゲームを読み込んでいます…</div>
-<div id="game" class="hidden">
-  <div class="card"><div id="roomInfo" class="status"></div><div id="turn" class="turn"></div><div id="timer" class="big timer">30</div><div id="need" class="big">「あ」から</div></div>
-  <div class="card"><div class="muted">盤面　💣の1マス手前にピッタリ止まればドボン成功！</div><div id="board" class="board"></div><div id="distance" class="status"></div></div>
-  <div class="card"><input id="word" maxlength="30" autocomplete="off" placeholder="ことばを入力"><button id="submit">決定</button><div id="msg" class="msg"></div></div>
-  <div class="card"><h3>参加者</h3><div id="players" class="players"></div></div>
-  <div class="card"><h3>履歴</h3><div id="history" class="history muted">まだありません</div></div>
-  <div id="result" class="card hidden"><div id="resultText" class="big"></div><a class="btn" href="./index.html">トップへ</a></div>
-</div>
-</main>
-<script>
-const DB='https://party-game-box-d129e-default-rtdb.asia-southeast1.firebasedatabase.app';
-const qs=new URLSearchParams(location.search), room=qs.get('room'), role=qs.get('role')||'player';
-const myId=role==='host'?'host':sessionStorage.getItem('pgb_player');
-const $=id=>document.getElementById(id); let last=null, busy=false;
-async function api(path,method='GET',body){const r=await fetch(DB+'/'+path+'.json',{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw Error('Firebase '+r.status);return r.json();}
-const small={'ぁ':'あ','ぃ':'い','ぅ':'う','ぇ':'え','ぉ':'お','ゃ':'や','ゅ':'ゆ','ょ':'よ','っ':'つ','ゎ':'わ','ゕ':'か','ゖ':'け'};
-function hira(c){if(!c)return'';let x=c.normalize('NFKC');const n=x.charCodeAt(0);if(n>=0x30A1&&n<=0x30F6)x=String.fromCharCode(n-0x60);return small[x]||x;}
-function first(w){return hira([...w][0])} function lastChar(w){let a=[...w];while(a.length&&/[ー・\s]/.test(a[a.length-1]))a.pop();return hira(a[a.length-1]||'');}
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function randStart(){const a=[...'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ'];return a[Math.floor(Math.random()*a.length)]}
-function bombCount(n){let r=n<=3?[4,6]:n<=5?[5,8]:n<=8?[7,10]:n<=10?[8,12]:[10,14];return r[0]+Math.floor(Math.random()*(r[1]-r[0]+1))}
-function bombs(n){let count=bombCount(n),s=new Set();while(s.size<count)s.add(5+Math.floor(Math.random()*56));return [...s].sort((a,b)=>a-b)}
-async function init(){
- if(!room){$('loading').textContent='ルームコードがありません';return}
- let r=await api('rooms/'+room); if(!r){$('loading').textContent='部屋が見つかりません';return}
- if(r.game==='draw'){$('loading').textContent='お絵かき当ては次の更新で追加します';return}
- if(role==='host'&&!r.dobon){
-   const entries=Object.entries(r.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0));
-   const ids=entries.map(x=>x[0]); const start=randStart();
-   await api('rooms/'+room+'/dobon','PUT',{phase:'playing',order:ids,turn:0,kana:start,pos:0,bombs:bombs(ids.length),used:{},history:{},turnStartedAt:Date.now(),winner:''});
- }
- $('loading').classList.add('hidden');$('game').classList.remove('hidden');refresh();setInterval(refresh,900);setInterval(tick,250);
+<a class="top" href="./index.html">← トップに戻る</a>
+<div id="load" class="card center">ゲームを読み込んでいます…</div>
+<section id="dobon" class="hidden">
+<div class="title">💣 ドボンしりとり</div><div class="card center"><div id="dturn"></div><div id="dtimer" class="timer">30</div><div id="dkana" class="big"></div></div>
+<div class="card"><div class="muted">💣の1マス手前にピッタリ止まれば成功</div><div id="dboard" class="board"></div><div id="ddist" class="center"></div></div>
+<div class="card"><input id="dword" placeholder="ことばを入力" maxlength="30"><button id="dsubmit" style="width:100%;margin-top:9px">決定</button><div id="dmsg" class="msg"></div></div>
+<div class="card"><b>参加者</b><div id="dplayers" class="players"></div></div><div class="card"><b>履歴</b><div id="dhistory" class="history muted"></div></div>
+</section>
+<section id="draw" class="hidden">
+<div class="title">🎨 お絵かき当て</div>
+<div class="card center"><div id="round"></div><div id="artist"></div><div id="drawtimer" class="timer">30</div><div id="prompt" class="big"></div></div>
+<div class="card"><canvas id="canvas" width="640" height="480"></canvas>
+<div id="tools" class="hidden"><div class="row palette" style="margin-top:10px"><button data-c="#111111" style="background:#111"></button><button data-c="#e53935" style="background:#e53935"></button><button data-c="#1e88e5" style="background:#1e88e5"></button><button data-c="#43a047" style="background:#43a047"></button><button data-c="#fdd835" style="background:#fdd835"></button></div><div class="row"><button id="eraser">消しゴム</button><button id="clear">全消し</button></div></div></div>
+<div class="card"><input id="guess" placeholder="答えを入力"><button id="guessBtn" style="width:100%;margin-top:9px">回答する</button><div id="gmsg" class="msg"></div></div>
+<div class="card"><b>スコア</b><div id="scores" class="players"></div></div><div class="card"><b>回答履歴</b><div id="guesses" class="history muted"></div></div>
+</section>
+</main><script>
+const DB='https://party-game-box-d129e-default-rtdb.asia-southeast1.firebasedatabase.app',q=new URLSearchParams(location.search),room=q.get('room'),role=q.get('role')||'player',me=role==='host'?'host':sessionStorage.getItem('pgb_player'),$=x=>document.getElementById(x);
+let R=null,busy=false,lastStrokeCount=0,drawing=false,color='#111111',prev=null;
+async function api(p,m='GET',b){let r=await fetch(DB+'/'+p+'.json',{method:m,headers:{'Content-Type':'application/json'},body:b===undefined?undefined:JSON.stringify(b)});if(!r.ok)throw Error(r.status);return r.json()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function order(r){return Object.entries(r.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0)).map(x=>x[0])}
+function small(c){let m={'ぁ':'あ','ぃ':'い','ぅ':'う','ぇ':'え','ぉ':'お','ゃ':'や','ゅ':'ゆ','ょ':'よ','っ':'つ'};return m[c]||c}function first(w){return small([...w][0]||'')}function lastc(w){return small([...w].reverse().find(x=>!/[ー・\s]/.test(x))||'')}
+function bc(n){let a=n<=3?[4,6]:n<=5?[5,8]:n<=8?[7,10]:n<=10?[8,12]:[10,14];return a[0]+Math.floor(Math.random()*(a[1]-a[0]+1))}function bombs(n){let s=new Set();while(s.size<bc(n))s.add(5+Math.floor(Math.random()*56));return [...s].sort((a,b)=>a-b)}
+const starts=[...'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ'];
+const prompts=['りんご','ねこ','いぬ','電車','自転車','ラーメン','富士山','傘','時計','ケーキ','魚','飛行機','雪だるま','バナナ','メガネ','車','家','花','太陽','月','パンダ','ロボット','カメラ','ギター','ハンバーガー'];
+async function init(){if(!room){$('load').textContent='ルームコードがありません';return}let r=await api('rooms/'+room);if(!r){$('load').textContent='部屋がありません';return}let ids=order(r);
+if(role==='host'){
+ if(r.game==='dobon'&&!r.dobon)await api('rooms/'+room+'/dobon','PUT',{phase:'playing',order:ids,turn:0,kana:starts[Math.floor(Math.random()*starts.length)],pos:0,bombs:bombs(ids.length),used:{},history:{},turnStartedAt:Date.now()});
+ if(r.game==='draw'&&!r.draw){let scores={};ids.forEach(x=>scores[x]=0);await api('rooms/'+room+'/draw','PUT',{phase:'playing',order:ids,round:1,artistIndex:0,prompt:prompts[Math.floor(Math.random()*prompts.length)],roundStartedAt:Date.now(),scores,strokes:{},guesses:{}})}
 }
-async function refresh(){try{const r=await api('rooms/'+room);if(!r||!r.dobon)return;last=r;render(r)}catch(e){}}
-function render(r){const g=r.dobon,p=r.players||{},id=g.order?.[g.turn];$('roomInfo').textContent='ルーム '+room+' / '+Object.keys(p).length+'人';
- $('turn').textContent=g.phase==='finished'?'ゲーム終了':((id===myId?'あなた':'「'+(p[id]?.name||'?')+'」')+'のターン');
- $('need').textContent='「'+g.kana+'」から'; $('submit').disabled=id!==myId||g.phase!=='playing'; $('word').disabled=$('submit').disabled;
- $('players').innerHTML=(g.order||[]).map((x,i)=>'<div class="player '+(i===g.turn?'current':'')+'">'+(x==='host'?'👑 ':'🎮 ')+esc(p[x]?.name||'?')+(x===myId?'（あなた）':'')+'</div>').join('');
- let bs=g.bombs||[],max=Math.max(30,(bs[bs.length-1]||20)+3);let html='';for(let i=0;i<=max;i++){let b=bs.includes(i),goal=bs.includes(i+1);html+='<div class="cell '+(b?'bomb ':'')+(goal?'goal ':'')+(i===g.pos?'pos':'')+'">'+(b?'💣':i)+'</div>'}$('board').innerHTML=html;
- let next=bs.find(x=>x>g.pos);$('distance').textContent=next?'現在 '+g.pos+'マス / 次の爆弾 '+next+'マス（成功地点 '+(next-1)+'）':'現在 '+g.pos+'マス';
- let h=Object.values(g.history||{}).sort((a,b)=>b.t-a.t);$('history').innerHTML=h.length?h.map(x=>'<div>'+esc(x.name)+'：<b>'+esc(x.word)+'</b> → '+esc(x.note)+'</div>').join(''):'まだありません';
- if(g.phase==='finished'){$('result').classList.remove('hidden');$('resultText').textContent='🎉 '+esc(p[g.winner]?.name||'プレイヤー')+' の勝ち！'}
- let el=document.querySelector('.cell.pos');if(el)el.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-}
-function tick(){if(!last?.dobon||last.dobon.phase!=='playing')return;let left=Math.max(0,30-Math.floor((Date.now()-(last.dobon.turnStartedAt||Date.now()))/1000));$('timer').textContent=left;if(left===0&&last.dobon.order?.[last.dobon.turn]===myId)timeout()}
-async function timeout(){if(busy)return;busy=true;try{let r=await api('rooms/'+room),g=r.dobon;if(g.order[g.turn]!==myId)return;let nt=(g.turn+1)%g.order.length;await api('rooms/'+room+'/dobon','PATCH',{turn:nt,turnStartedAt:Date.now()});show('時間切れ！ 次の人へ','err')}finally{busy=false}}
-function show(t,c){$('msg').className='msg '+c;$('msg').textContent=t;setTimeout(()=>{$('msg').textContent=''},2500)}
-$('submit').addEventListener('click',submitWord);$('word').addEventListener('keydown',e=>{if(e.key==='Enter')submitWord()});
-async function submitWord(){if(busy)return;busy=true;try{
- let r=await api('rooms/'+room),g=r?.dobon,p=r?.players||{};if(!g||g.phase!=='playing'||g.order[g.turn]!==myId)return;
- let w=$('word').value.trim().normalize('NFKC');let chars=[...w];if(chars.length<2){show('2文字以上で入力してください','err');return}
- if(first(w)!==hira(g.kana)){show('「'+g.kana+'」から始めてください','err');return}
- let end=lastChar(w);if(end==='ん'){show('「ん」で終わる言葉は使えません','err');return}
- let key=encodeURIComponent(w.replace(/[.#$\[\]\/]/g,'_'));if(g.used&&g.used[key]){show('その言葉は使用済みです','err');return}
- // 盤面は「文字数」ぶん進む。爆弾は通過OK。最終位置が爆弾の1マス手前なら勝利。
- let newPos=(g.pos||0)+chars.length, success=(g.bombs||[]).includes(newPos+1), hk='h_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
- await api('rooms/'+room+'/dobon/used/'+key,'PUT',true);
- await api('rooms/'+room+'/dobon/history/'+hk,'PUT',{t:Date.now(),name:p[myId]?.name||'?',word:w,note:success?'💥 ドボン成功！':newPos+'マス'});
- if(success){await api('rooms/'+room+'/dobon','PATCH',{pos:newPos,kana:end,phase:'finished',winner:myId});show('💥 ドボン成功！','ok')}
- else{await api('rooms/'+room+'/dobon','PATCH',{pos:newPos,kana:end,turn:(g.turn+1)%g.order.length,turnStartedAt:Date.now()});show('OK！ 次は「'+end+'」','ok')}
- $('word').value='';
- }catch(e){show('通信エラー。もう一度押してください','err')}finally{busy=false}}
+$('load').classList.add('hidden');(r.game==='draw'?$('draw'):$('dobon')).classList.remove('hidden');poll();setInterval(poll,700);setInterval(tick,250)}
+async function poll(){try{let r=await api('rooms/'+room);if(!r)return;R=r;r.game==='draw'?renderDraw(r):renderDobon(r)}catch(e){}}
+function renderDobon(r){let g=r.dobon;if(!g)return,p=r.players||{};let id=g.order[g.turn];$('dturn').textContent=id===me?'あなたのターン':'「'+(p[id]?.name||'?')+'」のターン';$('dkana').textContent='「'+g.kana+'」から';$('dsubmit').disabled=id!==me||g.phase!=='playing';$('dword').disabled=$('dsubmit').disabled;$('dplayers').innerHTML=g.order.map((x,i)=>'<div class="player '+(i===g.turn?'current':'')+'">'+esc(p[x]?.name||'?')+(x===me?'（あなた）':'')+'</div>').join('');
+let bs=g.bombs||[],mx=Math.max(30,(bs.at(-1)||20)+3),h='';for(let i=0;i<=mx;i++)h+='<div class="cell '+(bs.includes(i)?'bomb ':'')+(bs.includes(i+1)?'goal ':'')+(i===g.pos?'pos':'')+'">'+(bs.includes(i)?'💣':i)+'</div>';$('dboard').innerHTML=h;let nx=bs.find(x=>x>g.pos);$('ddist').textContent='現在 '+g.pos+' / '+(nx?'次の成功地点 '+(nx-1):'ゴール');let hs=Object.values(g.history||{}).sort((a,b)=>b.t-a.t);$('dhistory').innerHTML=hs.map(x=>'<div>'+esc(x.name)+'：'+esc(x.word)+' → '+esc(x.note)+'</div>').join('')||'まだありません';if(g.phase==='finished')$('dturn').textContent='🎉 '+esc(p[g.winner]?.name||'')+' の勝ち！'}
+function tick(){if(!R)return;if(R.game==='dobon'&&R.dobon?.phase==='playing')$('dtimer').textContent=Math.max(0,30-Math.floor((Date.now()-R.dobon.turnStartedAt)/1000));if(R.game==='draw'&&R.draw?.phase==='playing'){$('drawtimer').textContent=Math.max(0,30-Math.floor((Date.now()-R.draw.roundStartedAt)/1000));if(Date.now()-R.draw.roundStartedAt>=30000&&role==='host')nextRound()}}
+$('dsubmit').addEventListener('click',word);async function word(){if(busy)return;busy=true;try{let r=await api('rooms/'+room),g=r.dobon,p=r.players||{},w=$('dword').value.trim().normalize('NFKC');if(g.order[g.turn]!==me)return;if([...w].length<2)return msg('dmsg','2文字以上で入力','err');if(first(w)!==g.kana)return msg('dmsg','「'+g.kana+'」から始めてください','err');let e=lastc(w);if(e==='ん')return msg('dmsg','「ん」で終われません','err');let key=encodeURIComponent(w.replace(/[.#$\\[\\]\\/]/g,'_'));if(g.used?.[key])return msg('dmsg','使用済みです','err');let np=g.pos+[...w].length,win=g.bombs.includes(np+1),hk='h'+Date.now();await api('rooms/'+room+'/dobon/used/'+key,'PUT',true);await api('rooms/'+room+'/dobon/history/'+hk,'PUT',{t:Date.now(),name:p[me]?.name||'?',word:w,note:win?'💥ドボン成功':np+'マス'});await api('rooms/'+room+'/dobon','PATCH',win?{pos:np,kana:e,phase:'finished',winner:me}:{pos:np,kana:e,turn:(g.turn+1)%g.order.length,turnStartedAt:Date.now()});$('dword').value=''}finally{busy=false}}
+function msg(id,t,c){$(id).textContent=t;$(id).className='msg '+c;setTimeout(()=>$(id).textContent='',2200)}
+const cv=$('canvas'),ctx=cv.getContext('2d');ctx.lineCap='round';ctx.lineJoin='round';
+function renderDraw(r){let g=r.draw;if(!g)return,p=r.players||{},artist=g.order[g.artistIndex%g.order.length],mine=artist===me;$('round').textContent='ラウンド '+g.round;$('artist').textContent='✏️ '+esc(p[artist]?.name||'?')+' が描いています';$('prompt').textContent=mine?'お題：'+g.prompt:'お題：？？？';$('tools').classList.toggle('hidden',!mine);$('guess').disabled=mine||g.phase!=='playing';$('guessBtn').disabled=mine||g.phase!=='playing';$('scores').innerHTML=g.order.slice().sort((a,b)=>(g.scores?.[b]||0)-(g.scores?.[a]||0)).map(x=>'<div class="player">'+esc(p[x]?.name||'?')+'：'+(g.scores?.[x]||0)+'点</div>').join('');let gs=Object.values(g.guesses||{}).sort((a,b)=>b.t-a.t);$('guesses').innerHTML=gs.map(x=>'<div>'+esc(x.name)+'：'+esc(x.text)+'</div>').join('')||'まだありません';redraw(g.strokes||{})}
+function redraw(st){let arr=Object.values(st).sort((a,b)=>a.t-b.t);if(arr.length===lastStrokeCount)return;lastStrokeCount=arr.length;ctx.clearRect(0,0,cv.width,cv.height);for(let s of arr){if(s.clear){ctx.clearRect(0,0,cv.width,cv.height);continue}ctx.strokeStyle=s.c;ctx.lineWidth=s.w;ctx.beginPath();ctx.moveTo(s.x1*cv.width,s.y1*cv.height);ctx.lineTo(s.x2*cv.width,s.y2*cv.height);ctx.stroke()}}
+function pt(e){let r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}}
+cv.addEventListener('pointerdown',e=>{if(R?.game!=='draw'||R.draw.order[R.draw.artistIndex%R.draw.order.length]!==me)return;drawing=true;prev=pt(e);cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',async e=>{if(!drawing)return;let n=pt(e),s={t:Date.now(),x1:prev.x,y1:prev.y,x2:n.x,y2:n.y,c:color,w:color==='#ffffff'?22:5};prev=n;ctx.strokeStyle=s.c;ctx.lineWidth=s.w;ctx.beginPath();ctx.moveTo(s.x1*cv.width,s.y1*cv.height);ctx.lineTo(s.x2*cv.width,s.y2*cv.height);ctx.stroke();await api('rooms/'+room+'/draw/strokes/s'+Date.now()+Math.random().toString(36).slice(2,5),'PUT',s)});
+cv.addEventListener('pointerup',()=>drawing=false);cv.addEventListener('pointercancel',()=>drawing=false);document.querySelectorAll('[data-c]').forEach(b=>b.addEventListener('click',()=>color=b.dataset.c));$('eraser').addEventListener('click',()=>color='#ffffff');$('clear').addEventListener('click',async()=>{await api('rooms/'+room+'/draw/strokes','PUT',{});lastStrokeCount=-1;ctx.clearRect(0,0,cv.width,cv.height)});
+$('guessBtn').addEventListener('click',guess);async function guess(){let text=$('guess').value.trim();if(!text||!R?.draw)return;let g=R.draw,p=R.players||{},artist=g.order[g.artistIndex%g.order.length];if(me===artist)return;await api('rooms/'+room+'/draw/guesses/g'+Date.now()+Math.random().toString(36).slice(2,4),'PUT',{t:Date.now(),name:p[me]?.name||'?',text});if(text.normalize('NFKC').replace(/\s/g,'')===g.prompt.normalize('NFKC').replace(/\s/g,'')){let sc={...(g.scores||{})};sc[me]=(sc[me]||0)+2;sc[artist]=(sc[artist]||0)+1;await api('rooms/'+room+'/draw/scores','PUT',sc);msg('gmsg','🎉 正解！ +2点','ok');if(role==='host')await nextRound()}else msg('gmsg','ちがいます','err');$('guess').value=''}
+async function nextRound(){if(busy)return;busy=true;try{let r=await api('rooms/'+room),g=r.draw;if(!g||g.phase!=='playing')return;let nr=(g.round||1)+1,ni=(g.artistIndex+1)%g.order.length;if(nr>g.order.length*2){await api('rooms/'+room+'/draw/phase','PUT','finished');return}await api('rooms/'+room+'/draw','PATCH',{round:nr,artistIndex:ni,prompt:prompts[Math.floor(Math.random()*prompts.length)],roundStartedAt:Date.now(),strokes:{},guesses:{}});lastStrokeCount=-1;ctx.clearRect(0,0,cv.width,cv.height)}finally{busy=false}}
 init();
 </script></body></html>
